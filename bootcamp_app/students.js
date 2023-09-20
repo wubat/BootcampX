@@ -7,20 +7,20 @@ const pool = new Pool({
   database: 'bootcampx'
 });
 
-const argument1 = process.argv[2];
-const argument2 = process.argv[3];
-
-pool.query(`
+const cohortName = process.argv[2];
+const limit = process.argv[3] || 5;
+const values = [`%${cohortName}%`, limit]
+const queryString = `
 SELECT students.id as student_id, students.name as name, cohorts.name as cohort
 FROM students
-WHERE cohorts.name LIKE  `%${argument1}%`
-JOIN cohorts ON cohort_id = cohorts.id
-LIMIT ${argument2 || 5};
-`)
+JOIN cohorts ON cohorts.id = cohort_id
+WHERE cohorts.name LIKE $1
+LIMIT $2;
+`
+
+pool.query(queryString, values)
 .then(res => {
   res.rows.forEach(user => {
-    console.log(`${user.name} has an id of ${user.student_id} and was in the ${user.cohort} cohort`)
+    console.log(`${user.name} has an id of ${user.student_id} and was in the ${user.cohort} cohort`);
   })
-  console.log(res.rows)
-})
-.catch(err => console.error('query error', err.stack));
+}).catch(err => console.error('query error', err.stack));
